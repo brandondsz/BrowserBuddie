@@ -39,6 +39,21 @@ async function flushTime() {
   await chrome.storage.local.set({ timeData, dailyData });
 }
 
+async function saveState() {
+  await chrome.storage.local.set({
+    _state: { activeTabId, activeDomain, activeStart }
+  });
+}
+
+async function restoreState() {
+  const { _state } = await chrome.storage.local.get("_state");
+  if (_state && _state.activeDomain && _state.activeStart) {
+    activeTabId = _state.activeTabId;
+    activeDomain = _state.activeDomain;
+    activeStart = _state.activeStart;
+  }
+}
+
 async function switchTo(tabId) {
   await flushTime();
 
@@ -46,6 +61,7 @@ async function switchTo(tabId) {
     activeDomain = null;
     activeTabId = null;
     activeStart = null;
+    await saveState();
     return;
   }
 
@@ -59,6 +75,8 @@ async function switchTo(tabId) {
     activeTabId = null;
     activeStart = null;
   }
+
+  await saveState();
 }
 
 // Track tab activation
@@ -101,7 +119,12 @@ chrome.idle.onStateChanged.addListener((state) => {
 // Periodic flush every 30s so data isn't lost if the service worker dies
 setInterval(flushTime, 30_000);
 
-// Initialize on startup
-chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-  if (tabs.length > 0) switchTo(tabs[0].id);
+// Initialize on startup — restore state first, then sync with current tab
+restoreState().then(() => {
+  // Flush any time that accumulated while the worker was dead
+  flushTime().then(() => {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      if (tabs.length > 0) switchTo(tabs[0].id);
+    });
+  });
 });
