@@ -127,20 +127,93 @@
       color: #555;
       font-size: 13px;
     }
+
+    /* History view */
+    .history-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .history-row:hover { background: #161616; }
+
+    .history-date {
+      font-size: 13px;
+      font-weight: 500;
+      color: #e0e0e0;
+      min-width: 90px;
+    }
+
+    .history-date .weekday {
+      font-size: 11px;
+      font-weight: 400;
+      color: #555;
+    }
+
+    .history-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-top {
+      font-size: 11px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-stats {
+      display: flex;
+      gap: 10px;
+      font-size: 11px;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    .history-time {
+      font-size: 13px;
+      font-weight: 600;
+      color: #a29bfe;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: #a29bfe;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0;
+      margin-right: 8px;
+    }
+
+    .back-btn:hover { color: #6c5ce7; }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <header>
-    <h1>BrowserBuddie</h1>
+    <div style="display:flex;align-items:center">
+      <button id="backBtn" class="back-btn hidden" title="Back to history">&larr;</button>
+      <h1>BrowserBuddie</h1>
+    </div>
     <div class="controls">
       <select id="period">
-        <option value="today">Today</option>
-        <option value="all" selected>All Time</option>
+        <option value="today" selected>Today</option>
+        <option value="all">All Time</option>
+        <option value="history">History</option>
       </select>
       <button id="clearBtn" title="Clear all data">Clear</button>
     </div>
   </header>
-  <div class="total-bar">Total: <span id="totalTime">0s</span></div>
+  <div class="total-bar"><span id="totalLabel">Total:</span> <span id="totalTime">0s</span></div>
   <div class="site-list" id="siteList"></div>
   <script src="popup.js"></script>
 </body>
