@@ -1,12 +1,14 @@
 import type { DailyData, DailySummaries, TimeData } from "../types/storage";
 import { faviconUrl } from "../utils/domain";
 import { formatTime, getTodayKey } from "../utils/time";
+import { syncDailyDataToSupabase } from "../services/sync";
 
 const periodEl = document.getElementById("period") as HTMLSelectElement;
 const totalLabel = document.getElementById("totalLabel")!;
 const totalTime = document.getElementById("totalTime")!;
 const list = document.getElementById("siteList")!;
 const backBtn = document.getElementById("backBtn")!;
+const syncBtn = document.getElementById("syncBtn") as HTMLButtonElement;
 
 /** When set, we're drilling into a specific day from the history view */
 let drillDate: string | null = null;
@@ -172,6 +174,40 @@ document.getElementById("clearBtn")!.addEventListener("click", async () => {
     await chrome.storage.local.clear();
     drillDate = null;
     render();
+  }
+});
+
+syncBtn.addEventListener("click", async () => {
+  // Prevent multiple clicks
+  if (syncBtn.disabled) return;
+
+  try {
+    syncBtn.disabled = true;
+    syncBtn.classList.add("syncing");
+    const originalText = syncBtn.textContent || "Sync";
+    syncBtn.textContent = "Syncing";
+
+    const result = await syncDailyDataToSupabase();
+
+    if (result.success) {
+      syncBtn.textContent = "Synced!";
+      setTimeout(() => {
+        syncBtn.textContent = originalText;
+      }, 2000);
+    } else {
+      syncBtn.textContent = "Failed";
+      alert(`Sync failed: ${result.error || "Unknown error"}`);
+      setTimeout(() => {
+        syncBtn.textContent = originalText;
+      }, 2000);
+    }
+  } catch (error) {
+    console.error("Sync error:", error);
+    alert(`Sync error: ${error instanceof Error ? error.message : String(error)}`);
+    syncBtn.textContent = "Sync";
+  } finally {
+    syncBtn.disabled = false;
+    syncBtn.classList.remove("syncing");
   }
 });
 

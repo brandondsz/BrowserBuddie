@@ -1,5 +1,9 @@
 import * as esbuild from "esbuild";
 import { cpSync } from "fs";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
 
 const watch = process.argv.includes("--watch");
 
@@ -18,6 +22,10 @@ const buildOptions = {
   format: "iife",
   target: "chrome120",
   logLevel: "info",
+  define: {
+    "process.env.SUPABASE_URL": JSON.stringify(process.env.SUPABASE_URL || ""),
+    "process.env.SUPABASE_ANON_KEY": JSON.stringify(process.env.SUPABASE_ANON_KEY || ""),
+  },
 };
 
 if (watch) {

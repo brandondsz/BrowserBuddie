@@ -50,6 +50,29 @@
     .controls button:hover { background: #2a2a2a; }
     .controls select:focus, .controls button:focus { outline: none; border-color: #555; }
 
+    #syncBtn {
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      border-color: #6c5ce7;
+      color: #fff;
+      font-weight: 500;
+      position: relative;
+    }
+
+    #syncBtn:hover {
+      background: linear-gradient(135deg, #5f4fd1, #8f86e8);
+    }
+
+    #syncBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #syncBtn.syncing::after {
+      content: "...";
+      position: absolute;
+      right: 8px;
+    }
+
     .total-bar {
       padding: 10px 16px;
       font-size: 12px;
@@ -210,6 +233,7 @@
         <option value="all">All Time</option>
         <option value="history">History</option>
       </select>
+      <button id="syncBtn" title="Sync data to Server">Sync</button>
       <button id="clearBtn" title="Clear all data">Clear</button>
     </div>
   </header>

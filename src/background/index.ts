@@ -1,10 +1,15 @@
 import { flushTime, getActiveTabId, restoreState, switchTo } from "./tracker";
+import { syncDailyDataToSupabase } from "../services/sync";
+import { getTodayKey } from "../utils/time";
 
 /** Periodic flush interval (ms) so data isn't lost if the SW dies */
 const FLUSH_INTERVAL_MS = 30_000;
 
 /** Idle detection threshold in seconds (5 min — generous enough for video/reading) */
 const IDLE_DETECTION_SECONDS = 300;
+
+/** Alarm name for daily sync */
+const DAILY_SYNC_ALARM = "daily-sync";
 
 // ---- Chrome event listeners ----
 
@@ -50,6 +55,44 @@ chrome.idle.onStateChanged.addListener((state) => {
 // Periodic flush
 setInterval(flushTime, FLUSH_INTERVAL_MS);
 
+// ---- Daily Sync to Supabase ----
+
+/** Set up daily alarm for syncing data to Supabase */
+async function setupDailySync(): Promise<void> {
+  // Create an alarm that fires daily at midnight
+  await chrome.alarms.create(DAILY_SYNC_ALARM, {
+    when: getNextMidnight(),
+    periodInMinutes: 24 * 60, // Repeat every 24 hours
+  });
+
+  console.log("[Sync] Daily sync alarm created");
+}
+
+/** Get timestamp for next midnight (local time) */
+function getNextMidnight(): number {
+  const now = new Date();
+  const midnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 0, 0
+  );
+  return midnight.getTime();
+}
+
+/** Handle alarm events */
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === DAILY_SYNC_ALARM) {
+    console.log("[Sync] Daily sync alarm triggered");
+    const result = await syncDailyDataToSupabase();
+    if (result.success) {
+      console.log(`[Sync] Successfully synced ${result.synced} rows to Supabase`);
+    } else {
+      console.error(`[Sync] Failed to sync: ${result.error}`);
+    }
+  }
+});
+
 // Initialize: restore state, flush stale time, then sync with current tab
 restoreState().then(() => {
   flushTime().then(() => {
@@ -59,4 +102,7 @@ restoreState().then(() => {
       }
     });
   });
+
+  // Set up daily sync alarm
+  setupDailySync();
 });
