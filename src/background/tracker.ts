@@ -9,7 +9,7 @@ const FLUSH_THRESHOLD_MS = 500;
 const MAX_TRACKABLE_ELAPSED_MS = 10 * 60 * 1000; // 10 minutes
 
 /** Number of days of daily data to retain */
-const DAILY_DATA_RETENTION_DAYS = 30;
+const DAILY_DATA_RETENTION_DAYS = 7;
 
 // ---- In-memory tracking state ----
 let activeTabId: number | null = null;
@@ -57,6 +57,9 @@ export async function flushTime(): Promise<void> {
   const cutoffKey = cutoff.toISOString().slice(0, 10);
   for (const key of Object.keys(dailyData)) {
     if (key < cutoffKey) delete dailyData[key];
+  }
+  for (const key of Object.keys(dailySummaries)) {
+    if (key < cutoffKey) delete dailySummaries[key];
   }
 
   // Persist data AND updated worker state together so activeStart stays
